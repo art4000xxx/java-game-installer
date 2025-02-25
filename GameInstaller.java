@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameInstaller {
 
@@ -157,6 +159,7 @@ public class GameInstaller {
         } catch (IOException e) {
             System.out.println("Ошибка при создании файла temp.txt: " + e.getMessage());
         }
+
         // 8. Записываем информацию в файл temp.txt
         StringBuilder log = new StringBuilder();
         log.append("Лог создания файлов и директорий:\n");
@@ -203,6 +206,86 @@ public class GameInstaller {
             System.out.println("Информация записана в файл temp.txt");
         } catch (IOException e) {
             System.out.println("Ошибка при записи в файл temp.txt: " + e.getMessage());
+        }
+
+        // 9. Создаем экземпляры класса GameProgress
+        GameProgress progress1 = new GameProgress(100, 5, 1, 10.5);
+        GameProgress progress2 = new GameProgress(80, 10, 5, 50.2);
+        GameProgress progress3 = new GameProgress(50, 2, 10, 120.7);
+
+        // 10. Сохраняем игры
+        String save1Path = gamesPath + "/savegames/save1.dat";
+        String save2Path = gamesPath + "/savegames/save2.dat";
+        String save3Path = gamesPath + "/savegames/save3.dat";
+        saveGame(save1Path, progress1);
+        saveGame(save2Path, progress2);
+        saveGame(save3Path, progress3);
+
+        // 11. Архивируем сохранения
+        List<String> saves = new ArrayList<>();
+        saves.add(save1Path);
+        saves.add(save2Path);
+        saves.add(save3Path);
+        String zipPath = gamesPath + "/savegames/saves.zip";
+        zipFiles(zipPath, saves);
+
+        // 12. Удаляем файлы сохранений
+        try {
+            File save1 = new File(save1Path);
+            if (save1.delete()) {
+                System.out.println("Файл удален: " + save1Path);
+            }
+            File save2 = new File(save2Path);
+            if (save2.delete()) {
+                System.out.println("Файл удален: " + save2Path);
+            }
+            File save3 = new File(save3Path);
+            if (save3.delete()) {
+                System.out.println("Файл удален: " + save3Path);
+            }
+        } catch (Exception e) {
+            System.out.println("Ошибка при удалении файлов: " + e.getMessage());
+        }
+    }
+
+    // Метод для сохранения игры
+    public static void saveGame(String filePath, GameProgress gameProgress) {
+        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(filePath);
+             java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(fos)) {
+            oos.writeObject(gameProgress);
+            System.out.println("Сохранение игры выполнено: " + filePath);
+        } catch (IOException e) {
+            System.out.println("Ошибка при сохранении игры: " + e.getMessage());
+        }
+    }
+
+    // Метод для архивирования файлов
+    public static void zipFiles(String zipPath, List<String> filePaths) {
+        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(zipPath);
+             java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(fos)) {
+
+            for (String filePath : filePaths) {
+                try (java.io.FileInputStream fis = new java.io.FileInputStream(filePath)) {
+                    java.util.zip.ZipEntry zipEntry = new java.util.zip.ZipEntry(filePath.substring(filePath.lastIndexOf('/') + 1)); // Имя файла в архиве
+                    zos.putNextEntry(zipEntry);
+
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, length);
+                    }
+
+                    zos.closeEntry();
+                    System.out.println("Файл добавлен в архив: " + filePath);
+
+                } catch (IOException e) {
+                    System.out.println("Ошибка при архивировании файла " + filePath + ": " + e.getMessage());
+                }
+            }
+            System.out.println("Архивирование завершено: " + zipPath);
+
+        } catch (IOException e) {
+            System.out.println("Ошибка при создании архива: " + e.getMessage());
         }
     }
 }
